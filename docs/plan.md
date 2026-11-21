@@ -29,14 +29,14 @@ debugging and manual workflows.
 | C1 | Commands | Single command, `--mode list\|json\|ics\|sync`, default `list` |
 | F2 | Config library | `spf13/pflag` + `gopkg.in/yaml.v3` + a hand-written merge step |
 | K1 | Caching | No caching. Both NOAA products are fetched fresh each run (the Python cache key included the start date, so a daily cron run would never get a hit). |
-| T1 | Title | No `{source}` placeholder |
+| T1 | Title | No `{source}` placeholder; `{estimated}` placeholder added later |
 | S1 | Matching | Existing event matches the computed window with the nearest peak within ±3 h (peak stored in a private extended property) |
 | S2 | Ongoing events | Frozen once started: never patched or deleted. A window already in progress with no event gets created once. |
 | — | Stale events | Deleted (only floodcal-tagged, not-yet-started events, and only within the time span the fetched data covers) |
 | M1 | Makefile Go | `GO ?= go` |
 | — | Timestamps | NOAA data requested in GMT and converted in Go. This avoids the repeated-hour ambiguity when daylight saving ends. |
 | — | OFS missing/failed (hybrid) | Fall back: warn on stderr and fill with tide table (+offset if available). |
-| — | Estimate marker | Any event whose window includes a timestamp without OFS forecast data gets its title prefixed with `*` (no space, e.g. `*🌊 6.9 ft @ …`). Applies to every source (all `tide` events are marked). |
+| — | Estimate marker | Any event whose window includes a timestamp without OFS forecast data is "estimated". Title placeholder `{estimated}` renders as `estimated-label` (default `*`) for those events and as nothing otherwise. Default template ends with ` {estimated}`. A custom template without it shows no marker. Applies to every source (all `tide` events are estimated). |
 | — | `--source forecast` + OFS failure | Error (no fallback: that mode means forecast data only). |
 
 ## Data sources
@@ -48,10 +48,10 @@ debugging and manual workflows.
 
 ## Series construction (`--source`)
 
-- `tide`: tide table only (all marked `*`).
+- `tide`: tide table only (all estimated).
 - `forecast`: OFS only.
 - `hybrid` (default): at each timestamp, use OFS if available. Otherwise use tide table + offset (offset = 0 when
-  `--anomaly-offset=false` or there's no overlap), marked `*`.
+  `--anomaly-offset=false` or there's no overlap), marked estimated.
 
 Then: window detection with linear interpolation of threshold crossings, merging (`--merge-gap`), rounding
 (`--round-minutes`, ties round up), peak = highest sample (first on ties). All ported exactly from the Python
@@ -85,7 +85,8 @@ script.
 | `--datum` | `MLLW` |
 | `--timezone` | `America/Los_Angeles` |
 | `--location-label` | `Manzanita/101 Highway` |
-| `--title-template` | `🌊 {height} @ {time} Possible Flooding ({location}) 🛟` |
+| `--title-template` | `🌊 {height} @ {time} Possible Flooding ({location}) 🛟 {estimated}` |
+| `--estimated-label` | `*` |
 | `--mode` | `list` |
 | `--output` | stdout (ics: auto-named) |
 | `--source` | `hybrid` |

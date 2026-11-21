@@ -193,13 +193,16 @@ func TestBuildSeriesTideAllEstimated(t *testing.T) {
 
 func TestTitle(t *testing.T) {
 	ev := Event{PeakHeight: 6.94, PeakTime: ts("2026-01-01 10:06")}
-	tmpl := "🌊 {height} @ {time} Possible Flooding ({location}) 🛟"
-	if got, want := Title(ev, tmpl, "X"), "🌊 6.9 ft @ 10:06 AM Possible Flooding (X) 🛟"; got != want {
-		t.Errorf("got %q", got)
+	tmpl := "🌊 {height} @ {time} Possible Flooding ({location}) 🛟 {estimated}"
+	if got, want := Title(ev, tmpl, "X", "*"), "🌊 6.9 ft @ 10:06 AM Possible Flooding (X) 🛟"; got != want {
+		t.Errorf("not estimated: got %q", got)
 	}
 	ev.Estimated = true
-	if got := Title(ev, tmpl, "X"); got != "*🌊 6.9 ft @ 10:06 AM Possible Flooding (X) 🛟" {
+	if got := Title(ev, tmpl, "X", "foo"); got != "🌊 6.9 ft @ 10:06 AM Possible Flooding (X) 🛟 foo" {
 		t.Errorf("estimated: got %q", got)
+	}
+	if got := Title(ev, "{height}", "X", "foo"); got != "6.9 ft" {
+		t.Errorf("template without {estimated} must not show label: got %q", got)
 	}
 }
 
@@ -264,13 +267,12 @@ func TestGoldenParityWithPython(t *testing.T) {
 			const iso = "2006-01-02T15:04:05-07:00"
 			for i, w := range want {
 				g := got[i]
-				// Python titles have no estimate marker; compare the unmarked title.
-				g.Estimated = false
 				checks := []struct{ name, got, want string }{
 					{"start", g.Start.Format(iso), w.Start},
 					{"end", g.End.Format(iso), w.End},
 					{"peak_time", g.PeakTime.Format(iso), w.PeakTime},
-					{"title", Title(g, pythonTitleTemplate, "Manzanita/101 Highway"), w.Title},
+					// The Python template has no {estimated}, so no label appears.
+					{"title", Title(g, pythonTitleTemplate, "Manzanita/101 Highway", "*"), w.Title},
 				}
 				for _, c := range checks {
 					if c.got != c.want {

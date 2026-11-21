@@ -242,26 +242,27 @@ func sortPoints(p []Point) {
 	sort.SliceStable(p, func(i, j int) bool { return p[i].T.Before(p[j].T) })
 }
 
-// EstimatedPrefix is prepended to titles of events lacking forecast data.
-const EstimatedPrefix = "*"
-
 // FormatHeight renders a height like "6.9 ft".
 func FormatHeight(v float64) string { return fmt.Sprintf("%.1f ft", v) }
 
 // FormatClock renders a time like "10:06 AM".
 func FormatClock(t time.Time) string { return t.Format("3:04 PM") }
 
-// Title renders the event title from a template using {height}, {time} and
-// {location} placeholders, prefixing EstimatedPrefix for estimated events.
-func Title(ev Event, template, location string) string {
+// Title renders the event title from a template using {height}, {time},
+// {location} and {estimated} placeholders. {estimated} becomes
+// estimatedLabel for estimated events and "" otherwise; a template without
+// {estimated} never shows the label. Surrounding whitespace is trimmed so a
+// trailing " {estimated}" leaves no dangling space.
+func Title(ev Event, template, location, estimatedLabel string) string {
+	est := ""
+	if ev.Estimated {
+		est = estimatedLabel
+	}
 	r := strings.NewReplacer(
 		"{height}", FormatHeight(ev.PeakHeight),
 		"{time}", FormatClock(ev.PeakTime),
 		"{location}", location,
+		"{estimated}", est,
 	)
-	t := r.Replace(template)
-	if ev.Estimated {
-		t = EstimatedPrefix + t
-	}
-	return t
+	return strings.TrimSpace(r.Replace(template))
 }

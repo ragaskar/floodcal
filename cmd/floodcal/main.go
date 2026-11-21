@@ -57,9 +57,10 @@ func run(args []string, stdout, stderr io.Writer) error {
 		Timezone:      cfg.Timezone,
 		MinHeight:     cfg.MinHeight,
 		LocationLabel: cfg.LocationLabel,
-		TitleTemplate: cfg.TitleTemplate,
-		Source:        tide.Source(cfg.Source),
-		Info:          info,
+		TitleTemplate:  cfg.TitleTemplate,
+		EstimatedLabel: cfg.EstimatedLabel,
+		Source:         tide.Source(cfg.Source),
+		Info:           info,
 	}
 
 	switch cfg.Mode {
@@ -105,12 +106,10 @@ func fetchSeries(ctx context.Context, cfg *config.Config, stderr io.Writer) ([]t
 			if source == tide.SourceForecast {
 				return nil, tide.SeriesInfo{}, err
 			}
-			fmt.Fprintf(stderr, "[warn] OFS forecast unavailable, falling back to tide table for all events (titles marked %q): %v\n",
-				tide.EstimatedPrefix, err)
+			fmt.Fprintf(stderr, "[warn] OFS forecast unavailable, falling back to tide table for all events (all marked estimated): %v\n", err)
 			ofs = nil
 		} else if len(ofs) == 0 && source == tide.SourceHybrid {
-			fmt.Fprintf(stderr, "[warn] OFS forecast returned no data, falling back to tide table for all events (titles marked %q)\n",
-				tide.EstimatedPrefix)
+			fmt.Fprintln(stderr, "[warn] OFS forecast returned no data, falling back to tide table for all events (all marked estimated)")
 		}
 	}
 

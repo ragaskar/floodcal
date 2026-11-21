@@ -25,10 +25,13 @@ floodcal --mode sync          # settings from ~/.config/floodcal/config.yaml
   timestamp both cover, applied as a constant to the rest of the window
   (`--anomaly-offset=false` to disable). `--source forecast` uses OFS only;
   `--source tide` reproduces the prototype.
-- **`*` title prefix** marks any event whose window includes data that isn't from
-  the OFS forecast (tide table, with or without offset). If OFS fails in hybrid
-  mode, floodcal warns and falls back to the tide table, so every event is
-  marked `*`.
+- **Estimated events**: any event whose window includes data that isn't from
+  the OFS forecast (tide table, with or without offset) is "estimated". The
+  `{estimated}` title placeholder renders as `estimated-label` (default `*`)
+  for those events and as nothing otherwise. The default template puts it at
+  the end (`… 🛟 *`). A template without `{estimated}` never shows a marker.
+  If OFS fails in hybrid mode, floodcal warns and falls back to the tide
+  table, so every event is estimated.
 - **Title** puts height/time first so truncated calendar titles stay useful:
   `🌊 6.9 ft @ 10:06 AM Possible Flooding (Manzanita/101 Highway) 🛟`.
 - NOAA data is requested in **GMT** and converted locally, so the repeated
@@ -70,6 +73,12 @@ YAML > default. The YAML file defaults to `~/.config/floodcal/config.yaml`
 `dist/floodcal_<version>_{darwin_arm64,linux_amd64,linux_arm64}.tar.gz` plus
 `checksums.txt`. The version comes from `git describe --tags` (falls back to
 `v0.0.0-dev`). Override the Go binary with `make GO=...`.
+
+`make smoke SMOKE_CONFIG=path/to/config.yaml` runs live smoke tests against
+the configured Google Calendar: frozen events, creating an in-progress window
+once, and pagination. They use labelled events under a synthetic station tag
+and delete them afterwards, so real events are never touched. The test binary
+is built at `bin/floodcal-smoke.test` so an outbound firewall can allow it once.
 
 ### Verification
 

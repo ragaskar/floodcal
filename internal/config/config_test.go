@@ -112,6 +112,15 @@ func TestUnknownYAMLKeyIsError(t *testing.T) {
 	}
 }
 
+func TestStringValuesAreTrimmed(t *testing.T) {
+	// Closing quote on the next line: YAML folds the newline into a space.
+	p := writeFile(t, "service-account-keyfile: \"/k.json\n\"\ncalendar-id: \"  abc \"\n")
+	c := load(t, []string{"--config", p, "--location-label", " Here "}, map[string]string{"FLOODCAL_DATUM": "MLLW\n"})
+	if c.ServiceAccountKeyfile != "/k.json" || c.CalendarID != "abc" || c.LocationLabel != "Here" || c.Datum != "MLLW" {
+		t.Fatalf("keyfile %q calendar %q label %q datum %q", c.ServiceAccountKeyfile, c.CalendarID, c.LocationLabel, c.Datum)
+	}
+}
+
 func TestBoolFlagsAndEnv(t *testing.T) {
 	c := load(t, []string{"--anomaly-offset=false", "--dry-run"}, nil)
 	if c.AnomalyOffset || !c.DryRun {
@@ -216,6 +225,8 @@ func sprintField(c *Config, name string) string {
 		return c.LocationLabel
 	case "title-template":
 		return c.TitleTemplate
+	case "estimated-label":
+		return c.EstimatedLabel
 	case "output":
 		return c.Output
 	case "anomaly-offset":

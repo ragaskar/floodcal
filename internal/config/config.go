@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	DefaultTitleTemplate = "\U0001F30A {height} @ {time} Possible Flooding ({location}) \U0001F6DF"
+	DefaultTitleTemplate = "\U0001F30A {height} @ {time} Possible Flooding ({location}) \U0001F6DF {estimated}"
 	EnvPrefix            = "FLOODCAL_"
 	ConfigEnv            = EnvPrefix + "CONFIG"
 	GoogleCredentialsEnv = "GOOGLE_APPLICATION_CREDENTIALS"
@@ -39,6 +39,7 @@ type Config struct {
 	Timezone              string
 	LocationLabel         string
 	TitleTemplate         string
+	EstimatedLabel        string
 	Mode                  string
 	Output                string
 	Source                string
@@ -77,8 +78,11 @@ func EnvName(name string) string {
 	return EnvPrefix + strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
 }
 
+// str sets a string option, trimming leading/trailing whitespace from every
+// source (e.g. a YAML quoted string whose closing quote slipped onto the next
+// line folds that newline into a trailing space).
 func str(p func(*Config) *string) func(*Config, string) error {
-	return func(c *Config, v string) error { *p(c) = v; return nil }
+	return func(c *Config, v string) error { *p(c) = strings.TrimSpace(v); return nil }
 }
 
 func integer(p func(*Config) *int) func(*Config, string) error {
@@ -125,7 +129,8 @@ var options = []option{
 	{"datum", kindString, "MLLW", "NOAA tidal datum", str(func(c *Config) *string { return &c.Datum })},
 	{"timezone", kindString, "America/Los_Angeles", "IANA timezone for event times", str(func(c *Config) *string { return &c.Timezone })},
 	{"location-label", kindString, "Manzanita/101 Highway", "location name used in event titles", str(func(c *Config) *string { return &c.LocationLabel })},
-	{"title-template", kindString, DefaultTitleTemplate, "event title template; placeholders {height}, {time}, {location}", str(func(c *Config) *string { return &c.TitleTemplate })},
+	{"title-template", kindString, DefaultTitleTemplate, "event title template; placeholders {height}, {time}, {location}, {estimated}", str(func(c *Config) *string { return &c.TitleTemplate })},
+	{"estimated-label", kindString, "*", "text substituted for {estimated} in title-template when an event includes non-forecast (tide table) data", str(func(c *Config) *string { return &c.EstimatedLabel })},
 	{"mode", kindString, "list", "list | json | ics | sync (sync updates Google Calendar)", str(func(c *Config) *string { return &c.Mode })},
 	{"output", kindString, "", "output file for list/json/ics (default: stdout; ics auto-named)", str(func(c *Config) *string { return &c.Output })},
 	{"source", kindString, "hybrid", "hybrid | forecast | tide: hybrid = OFS forecast, then tide table (+anomaly offset) after it ends", str(func(c *Config) *string { return &c.Source })},

@@ -33,7 +33,8 @@ datum: MLLW
 #              table (+ anomaly offset, see below) after the forecast ends.
 #   forecast - OFS forecast only (about 2-3 days).
 #   tide     - astronomical tide table only (the original Python behavior).
-# Events containing any non-forecast data get a "*" title prefix.
+# Events containing any non-forecast data are "estimated"; see
+# estimated-label and the {estimated} placeholder in title-template.
 source: hybrid
 
 # hybrid only: add the mean (forecast - tide table) difference to tide-table
@@ -54,8 +55,14 @@ timezone: America/Los_Angeles
 # Location name used in event titles.
 location-label: "Manzanita/101 Highway"
 
-# Event title. Placeholders: {height}, {time}, {location}.
-title-template: "🌊 {height} @ {time} Possible Flooding ({location}) 🛟"
+# Event title. Placeholders: {height}, {time}, {location}, {estimated}.
+# {estimated} becomes estimated-label for estimated events and nothing
+# otherwise. Remove it from the template to never show a marker. Leading and
+# trailing whitespace in the rendered title is trimmed.
+title-template: "🌊 {height} @ {time} Possible Flooding ({location}) 🛟 {estimated}"
+
+# Text substituted for {estimated} when an event includes non-forecast data.
+estimated-label: "*"
 
 # --- Output -----------------------------------------------------------------
 

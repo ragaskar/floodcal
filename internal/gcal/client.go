@@ -39,6 +39,9 @@ type Client struct {
 	retries    int
 	backoff    time.Duration
 	sleep      func(time.Duration)
+	// pageSize is the events.list page size (Google's max is 2500; 250 is
+	// its default). Tests lower it to exercise pagination cheaply.
+	pageSize int64
 }
 
 // NewClient authenticates with a service account key file, requesting only
@@ -57,7 +60,7 @@ func NewClient(ctx context.Context, keyfile, calendarID, timezone string, log io
 		return nil, fmt.Errorf("creating calendar client: %w", err)
 	}
 	return &Client{svc: svc, calendarID: calendarID, timezone: timezone, log: log,
-		retries: 5, backoff: 2 * time.Second, sleep: time.Sleep}, nil
+		retries: 5, backoff: 2 * time.Second, sleep: time.Sleep, pageSize: 250}, nil
 }
 
 func retryable(err error) bool {
@@ -107,7 +110,7 @@ func (c *Client) List(ctx context.Context, station string, from, to time.Time) (
 				TimeMax(to.Format(time.RFC3339)).
 				SingleEvents(true).
 				ShowDeleted(false).
-				MaxResults(250)
+				MaxResults(c.pageSize)
 			if pageToken != "" {
 				call = call.PageToken(pageToken)
 			}
