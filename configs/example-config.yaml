@@ -1,0 +1,80 @@
+# floodcal example configuration.
+#
+# Copy to ~/.config/floodcal/config.yaml (the default location) or pass
+# --config /path/to/config.yaml (or set FLOODCAL_CONFIG).
+#
+# Every key here can also be set with a flag of the same name (--min-height)
+# or an environment variable (FLOODCAL_MIN_HEIGHT).
+# Precedence: flag > environment > this file > built-in default.
+# The values below are the built-in defaults unless noted. Unknown keys are an
+# error, so typos fail loudly instead of being silently ignored.
+
+# --- Data -------------------------------------------------------------------
+
+# NOAA CO-OPS station ID. 9414290 = San Francisco.
+station: "9414290"
+
+# First day of the window, YYYY-MM-DD. Leave empty for "today" (in timezone),
+# which is what you want for a daily cron job.
+start: ""
+
+# Number of days in the window. NOAA's weather-aware OFS forecast only covers
+# about the first 2-3 days; days beyond that use the tide table (see source).
+days: 14
+
+# Alert when the water level is at or above this many feet (relative to datum).
+min-height: 6.0
+
+# NOAA tidal datum. MLLW is what tide tables use.
+datum: MLLW
+
+# Where heights come from:
+#   hybrid   - OFS forecast (includes weather) where available, then the tide
+#              table (+ anomaly offset, see below) after the forecast ends.
+#   forecast - OFS forecast only (about 2-3 days).
+#   tide     - astronomical tide table only (the original Python behavior).
+# Events containing any non-forecast data get a "*" title prefix.
+source: hybrid
+
+# hybrid only: add the mean (forecast - tide table) difference to tide-table
+# heights after the forecast ends. false = plain tide table.
+anomaly-offset: true
+
+# --- Event shaping ----------------------------------------------------------
+
+# Merge two windows separated by a dip below min-height of at most N minutes.
+merge-gap: 30
+
+# Round event start/end to the nearest N minutes.
+round-minutes: 15
+
+# IANA timezone for event times.
+timezone: America/Los_Angeles
+
+# Location name used in event titles.
+location-label: "Manzanita/101 Highway"
+
+# Event title. Placeholders: {height}, {time}, {location}.
+title-template: "🌊 {height} @ {time} Possible Flooding ({location}) 🛟"
+
+# --- Output -----------------------------------------------------------------
+
+# list | json | ics  - print/write events (debugging, manual workflows)
+# sync               - create/update/delete events in Google Calendar
+mode: list
+
+# Output file for list/json/ics. Empty = stdout (ics: auto-named file).
+output: ""
+
+# --- Google Calendar (mode: sync) -------------------------------------------
+
+# Calendar ID from Google Calendar > Settings > <calendar> > Integrate calendar.
+# Required for sync. (No default.)
+calendar-id: ""
+
+# Path to the service account JSON key. Required for sync; falls back to
+# $GOOGLE_APPLICATION_CREDENTIALS if empty. (No default.)
+service-account-keyfile: ""
+
+# Print the planned create/update/delete changes without making them.
+dry-run: false
